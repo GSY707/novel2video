@@ -15,25 +15,27 @@
 # 怎么使用这个项目
 注：这是一次技术性验证，使用非常麻烦，需要修改代码
 
-llm API准备：
+## llm API准备：
 
 准备两个你喜欢的llm API，在 /modules/AI_api.py 中进行适配
 
 推荐一个便宜的（大于qwen1 7B），一个贵的（大于deepseek v3.2）
 
-tts API准备：
+## tts API准备：
 
 准备一些你喜欢的tts API，在 /modules/AI_api.py 中进行适配
 
 并在 /modules/config.py 中填写相应特征
 
-图像生成器准备：
+## 图像生成器准备：
 
 需要配置image_api文件夹，推荐重写实现，调用 comfy ui 的api，
 
 然后在 /modules/processor.py 中的生成图像部分配置
 
-编写类似 /main.py 的python代码，然后执行
+## 其他
+
+运行：编写类似 /main.py 的python代码，然后执行
 
 可能需要对提示词进行一些适配
 
