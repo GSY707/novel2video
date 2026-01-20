@@ -1,0 +1,22 @@
+3. 操作流程总结 (如何部署)
+电脑 A (有网)：
+
+安装 Python 依赖：pip install torch diffusers transformers huggingface_hub requests tqdm
+建立文件夹结构，写入上述代码。
+运行 python -m image_api.download_models。
+结果：脚本会自动去 HuggingFace 把 Z-Image Turbo 整个文件夹、Koala 整个文件夹、NoobAI 单个文件全部下载到 /image_api/model/ 下。
+转移：
+
+把整个 image_api 文件夹拷贝到 U 盘。
+电脑 B (无网)：
+
+拷贝文件夹进去。
+确保有 Python 和 Torch 环境。7
+在代码中调用 generate_image(prompt="1girl", model_name="Z Image Turbo")。
+无需任何下载，直接运行。
+4. 关于模型特定调用的说明
+根据你的要求查阅了资料：
+
+Z Image Turbo: 这是一个基于 DiT (Diffusion Transformer) 的架构，不是标准的 U-Net。因此，必须下载其 pipeline.py 和关联代码。我们的 snapshot_download 策略会把这些代码一起下载下来，trust_remote_code=True 参数会告诉 diffusers 库使用文件夹里的代码加载模型。这是处理新架构模型的标准做法。
+NoobAI-XL: 它是 V-Prediction 模型。这在 SDXL 中比较少见。关键点在于 Scheduler 配置。我在代码中特别处理了 if "NoobAI" in model_name 的逻辑，强制将调度器切换为 EulerAncestralDiscreteScheduler 并开启 use_karras_sigmas=True，这是官方推荐的配置，能保证画质。
+KOALA-1B: 它也是一种特殊的蒸馏模型，虽然兼容 SDXL Pipeline，但拥有更小的 UNet。下载整个文件夹能保证 config.json 正确指引 Diffusers 加载它特有的 UNet 结构。

@@ -1,0 +1,76 @@
+meta:
+  name: shot_blueprint_generation
+  version: "2.0"
+  description: "分镜规划任务：将小说文本转化为结构化分镜列表"
+  author: "prompt-team"
+
+prompts:
+  SYSTEM_PROMPT: |
+    你是一个被集成到软件系统中的语言模型组件。
+
+        【思考规则】
+        - 你可以在内部进行完整推理、分析和判断。
+        - 你的推理过程【绝对禁止】出现在最终输出中。
+        - 不要输出 thoughts、analysis、reasoning、解释或任何自然语言说明。
+
+        【输出规则】
+        - 你只能输出最终结果。
+        - 输出必须严格符合用户要求的格式（JSON 或 YAML）。
+        - 输出内容必须是【唯一内容】，不能有前后缀文字、注释或标记。
+        - 不要使用 Markdown 代码块。
+        - 不要使用注释符号（如 #）。
+
+        【失败规则】
+        - 如果你无法严格按照指定格式完成输出，这是一个失败。
+        - 在失败情况下，不要输出“接近正确”的内容。
+        - 你必须仍然尝试输出，但任何格式错误都会被视为系统错误。
+
+        你已理解以上规则，并将严格遵守。
+
+  USER_PROMPT_TEMPLATE: |
+    # Role
+    电影分镜导演 (Storyboard Artist)，擅长将文学叙事转化为视听语言，精准控制镜头节奏与对象状态。
+
+    # Task
+    将连续的小说文本切分为独立的视觉镜头，并确定每个镜头的类型、对象状态及导演意图。
+
+    # Input Context
+    - **text_segment (当前待处理文本)**: {text_segment}
+    - **prev_shots_context (前5个镜头参考)**: {prev_shots_context}
+    - **objects_list (可用对象及状态)**: {objects_list}
+    - **chapter_mood (章节情感基调)**: {chapter_mood}
+
+    # Constraints
+    1. **切分规则**：一个核心动作或一句独立对白必须拆分为一个独立镜头（长镜头除外）。
+    2. **状态绑定**：必须从 objects_list 中精确匹配出场对象名称（main_object）及其当前符合上下文的状态（object_state）。
+    3. **镜头分级**：根据情节重要性从 "Fast", "Normal", "HighQuality" 中三选一。
+    4. **空间连贯性**：在 visual_summary 中必须标注对象的相对位置（如“左侧”、“右侧”、“背景”），以确保空间逻辑。
+    5. **严禁输出**：禁止输出任何 Markdown 代码块标签（如 ```yaml）、推理过程（thoughts）或关于切分逻辑的解释。
+
+    # Output Format (YAML)
+    直接输出为一个 YAML 列表（List），严禁包含任何层级的键名（如 output: 或 shot_list:），每个元素包含：
+    - id: 逻辑序号（Integer）。
+    - text_source: 对应的原文句子。
+    - type: "Fast", "Normal" 或 "HighQuality" 之一。
+    - duration: 镜头时长（秒，Integer）。
+    - visual_summary: 中文画面视觉描述，包含构图与位置。
+    - director_demand: 导演意图与情感侧重。
+    - main_object: 主要对象名称（必须严格匹配 objects_list 中的名称）。
+    - object_state: 对象状态（必须严格匹配 objects_list 中对应的 states 列表）。
+    - secondary_objects: 次要对象列表（List of String）。
+
+    # Few-Shot Example
+    - id: 1
+      text_source: "小明缓缓举起那柄闪烁寒光的魔法剑。"
+      type: "HighQuality"
+      duration: 5
+      visual_summary: "近景，画面中心的小明（childhood）双手握住魔法剑，剑身在画面右侧闪烁寒光。"
+      director_demand: "慢动作升格，强调仪式的庄重感与武器的威慑力。"
+      main_object: "小明"
+      object_state: "childhood"
+      secondary_objects: ["魔法剑"]
+
+    # Your Turn
+    请开始处理。
+
+  CORRECTION_PROMPT_TEMPLATE: "你之前的输出不符合 YAML 列表格式，或包含非目标文本（如 Markdown 标签、thoughts、注释）。请严格按照格式要求重新输出，不要包含任何解释文字。"
